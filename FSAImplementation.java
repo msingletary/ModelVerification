@@ -2,190 +2,133 @@ import java.util.*;
 
 public class FSAImplementation{
 	
-	public class State {
-
-		int index;
-		Condition[] conditions;
-		ArrayList<Integer> transitions;
-
-		public State(int newIndex, Condition[] newConditions) {
-			this.index = newIndex;
-			this.conditions = newConditions;
-			transitions = new ArrayList<Integer>();
-		}
-
-		boolean isStateSatisfiedBy(int[] values) {
-			if (this.conditions == null) {
-		 		System.out.println("condition is null.");
-			}
-			for (int i = 0; i < this.conditions.length; i++) {
-				//if (!this.conditions[i].isConditionSatisfiedBy(s2.conditions[i]))
-				Condition c1 = this.conditions[i];
-				if (!c1.isConditionSatisfiedBy(values[i])) {
-					return false;
-				}
-			}
-			return true;
-		}
-
-		// adds a transition to the FSA between the specified states only if it doesn't already exist
-		void addTransition(int nextStateIndex) {
-			// This makes sure duplicate transitions are not added. Thus it is
-			// not necessary to check if the transition is present before calling this function
-			if (!this.transitions.contains(nextStateIndex)) {
-				this.transitions.add(nextStateIndex);
-			}
-		}
-
-		/*
-		void addTransition(int currentStateIndex, int nextStateIndex) {
-			if (!transitionPresent) {
-				states[currentStateIndex].transitions.add(nextStateIndex);
-			}
-		}
-		*/
-
-		String printState() {
-			String conditionList = "Conditions: ";
-			for (Condition c : conditions) {
-				if (c.low == c.high) {
-					conditionList += "(" + c.low + ") ";
-				} else {
-					conditionList += "(" + c.low + ", " + c.high + ") ";
-				}
-			}
-			String output = conditionList + "\n";
-			output += "Transitions: ";
-			for (int t : transitions) {
-				output += t + ", ";
-			}
-			return output;
-		}
-	}
-
-	public class Condition {
-		int low;
-		int high;
-		// should I have an int single, to make it more clear that it is not always a range?
-
-		public Condition(int single) {
-			low = single;
-			high = single;
-		}
-
-		public Condition(int low, int high) {
-			low = low;
-			high = high;
-		}
-
-		boolean isConditionSatisfiedBy(int value) {
-			if (this.low == this.high) {
-				// if low = high, not a range, but a single value. so it doesn't matter whether you check low or high.
-				return (this.low == value);
-			} else {
-				return ((this.low <= value) && (this.high > value));
-			}
-		}
-	}
-
-
 	ArrayList<State> states;
 	int numVariables; // number of variables being recorded, or the number of variables that matter to the states. (should be equal ?)
 
+	/** 
+	 * Constructor for the FSAImplementation program.
+	 * @param numVariables is the number of variables recorded from the model & also the number of 
+	 * 				different variables considered when evaluating state equality
+	 */
 	public FSAImplementation(int numVariables) {
 		states = new ArrayList<State>();
 	}
 
+	/** 
+	 * Add a new state to the FSA.
+	 * @param conditionValues
+	 * @return
+	 */
 	int addNewState(int[] conditionValues) {
 		int newIndex = states.size();
-		Condition[] conds = new Condition[numVariables];
-		for (int i = 0; i < numVariables; i++) {
+		Condition[] conds = new Condition[conditionValues.length];
+		for (int i = 0; i < conditionValues.length; i++) {
+			//System.out.println(conditionValues[i]);
+			conds[i] = new Condition(conditionValues[i]);
+		}
+		states.add(new State(newIndex, conds));
+		return newIndex;
+	}
+	
+	/**
+	 * Searches the existing states in the FSA for one that is satisfied by the specified condition values.
+	 * If no matching state is found, a new state is created and added to the FSA.
+	 * @param conditionValues
+	 * @return
+	 */
+	int addNewStateIfNotPresent(int[] conditionValues) {
+		// could check currentCondition first here, instead of the other ?
+		for (int i = 0; i < states.size(); i++) {
+			if (states.get(i).isStateSatisfiedBy(conditionValues)) {
+				return i;
+			}
+		}
+		// could call addNewState(data) instead of the following if want to delegate;
+		
+		int newIndex = states.size();
+		Condition[] conds = new Condition[conditionValues.length];
+		for (int i = 0; i < conditionValues.length; i++) {
 			conds[i] = new Condition(conditionValues[i]);
 		}
 		states.add(new State(newIndex, conds));
 		return newIndex;
 	}
 
-	boolean isTransitionPresent(int currentStateIndex, int nextStateIndex) {
-		State currentState = states.get(currentStateIndex);
-		ArrayList<Integer> transitions = currentState.transitions;
-		return transitions.contains(nextStateIndex);
-	}
 
 
-
-	void createStateMachineFromData(int[][] allData) {
-
-		/*
-		 allData:
-		 [
-		 	[0,1,1],
-			[1,1,1],
-			[1,1,1]
-		 ]
-		 */
-
-		// create first state / current state:
-		int firstStateIndex = -1;
-		for (int i = 0; i < states.size(); i++) {
-			if (states.get(i).isStateSatisfiedBy(allData[0])) {
-				firstStateIndex = i;
-				break;
+	// rename to reflect that it might not be the first run
+	// add data to FSA? modify FSA? extendFSA?
+	void createFSAFromData(int[][] allData) {
+		// obtain the first current state:
+		int[] firstDataSet = allData[0];
+		int firstStateIndex = addNewStateIfNotPresent(firstDataSet);
+		
+		/**
+		if (states.size() == 0) {
+			// there are no states in the states array
+			// which means none were defined from the DSL and this is the first run of data for this FSA
+			firstStateIndex = addNewState(allData[0]); 
+			// dont need to call addNewStateIfNotPresent because we know none of present
+			// but if get rid of plain addNewState it would cause no issues to just call addNewStateIfNonePresent
+		} else {
+			// if there are states defined in the DSL
+			// or if this is not the first set of data for this FSA
+			for (int i = 0; i < states.size(); i++) {
+				if (states.get(i).isStateSatisfiedBy(allData[0])) {
+					firstStateIndex = i;
+					break;
+				}
+			}
+			if (firstStateIndex == -1) {
+				firstStateIndex = addNewState(allData[0]);
 			}
 		}
-		if (firstStateIndex == -1) {
-			firstStateIndex = addNewState(allData[0]);
-		}
+		*/
 
 		State currentState = states.get(firstStateIndex);
 
-
-
 		// read in and analyze FSA for rest of the data
 		for (int numAnalyzed = 1; numAnalyzed < allData.length; numAnalyzed++) {
-		 	int[] data = allData[numAnalyzed];
-
-		 	if (data == null) {
-		 		System.out.println("data is null.");
-		 	}
-		 	if (currentState == null) {
-		 		System.out.println("current state is null.");
-		 	}
-
-			if (currentState.isStateSatisfiedBy(data)) {
-				currentState.addTransition(currentState.index);
+		 	int[] nextData = allData[numAnalyzed];
+			if (currentState.isStateSatisfiedBy(nextData)) {
+				// stays in the same state
+				currentState.addTransitionIfNotPresent(currentState.getIndex());
 			} else {
-				boolean matchFound = false;
-				for (int i = 0; i < states.size(); i++) {
-					if (states.get(i).isStateSatisfiedBy(data)) {
-						currentState.addTransition(i);
-						currentState = states.get(i);
-						matchFound = true;
-					}
-				}
-				if (!matchFound) {
-					addNewState(data);
-				}
+				int nextStateIndex = addNewStateIfNotPresent(nextData);
+				currentState.addTransitionIfNotPresent(nextStateIndex);
+				currentState = states.get(nextStateIndex);
 			}
 		}
 	}
+	
+	
 
 	public static void main(String[] args) {
+		
+		int numVars = 3;
+		int numDataSets = 7;
+		
 		int[] data_a = {0,1,1,1,1,2,2};
 		int[] data_b = {1,1,1,2,1,1,1};
 		int[] data_c = {1,1,1,1,1,1,0};
+		// assert all are the same length ? if not guaranteed from implementation
+		
+		int[][] dataABC = new int[numDataSets][numVars]; // new int[data_a.length][numVars]
+		
+		for (int i = 0; i < numDataSets; i++) {
+			dataABC[i][0] = data_a[i];
+			dataABC[i][1] = data_b[i];
+			dataABC[i][2] = data_c[i];
+		}
+		
+		FSAImplementation fsa = new FSAImplementation(numVars);
 
-		int[][] dataABC = new int[3][];
-		dataABC[0] = data_a;
-		dataABC[1] = data_b;
-		dataABC[2] = data_c;
-
-		FSAImplementation fsa = new FSAImplementation(3);
-
-		fsa.createStateMachineFromData(dataABC);
-		System.out.println(fsa.states.size());
+		fsa.createFSAFromData(dataABC);
+		
+		System.out.println("\nfinished creating fsa!\n");
+		System.out.println("number of states in the FSA: " + fsa.states.size());
 		for (State s : fsa.states) {
-			System.out.println(s.printState());
+			System.out.println(s.toString());
 		}
 	}
 
