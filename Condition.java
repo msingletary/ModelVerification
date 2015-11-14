@@ -6,9 +6,9 @@
 public class Condition {
 	private int low;
 	private int high;
-	// should I have an int single, to make it more clear that it is not always a range?
 
 	/**
+	 * Instantiates a Condition object that represents a single value
 	 * @param singleConditionValue A single value
 	 */
 	public Condition(int singleConditionValue) {
@@ -17,7 +17,7 @@ public class Condition {
 	}
 
 	/**
-	 * Create a new Condition that represents a range.
+	 * Create a new Condition object that represents a range.
 	 * @param low The bottom value in a range, inclusive
 	 * @param high The highest value in a range, exclusive
 	 */

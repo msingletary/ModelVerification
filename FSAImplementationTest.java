@@ -28,7 +28,7 @@ public class FSAImplementationTest {
 
 		System.out.println(fsa.toString());
 		
-		return fsa.states;
+		return fsa.getStates();
 	}
 	
 	static int[][] createAllDataArray(int numVariables, int[] a, int[] b, int[] c) {

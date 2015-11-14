@@ -2,60 +2,66 @@ import java.util.*;
 
 public class FSAImplementation{
 	
-	ArrayList<State> states;
-	int numVariables; // number of variables being recorded, or the number of variables that matter to the states. (should be equal ?)
+	/* Number of variables that are recorded from the model;
+	 * Number of variables are used as conditions for the States in this FSA.
+	 */
+	private int numVariables;
+	private ArrayList<State> states;
 
+	
 	/** 
 	 * Constructor for the FSAImplementation program.
-	 * @param numVariables is the number of variables recorded from the model & also the number of 
-	 * 				different variables considered when evaluating state equality
+	 * @param numVariables The number of variables recorded from the model
+	 * 		& also the number of variables considered when evaluating states
 	 */
 	public FSAImplementation(int numVariables) {
 		states = new ArrayList<State>();
 	}
 	
+	
+	/** @return the number of states that have been defined for this FSA */
 	public int getNumStates() {
-		return states.size();
+		return this.states.size();
+	}
+	
+	public ArrayList<State> getStates() {
+		return this.states;
 	}
 
 	
 	/**
-	 * Searches the existing states in the FSA for one that is satisfied by the specified condition values.
-	 * If no matching state is found, a new state is created and added to the FSA.
+	 * Searches the existing states in the FSA for one that is satisfied by the
+	 * specified values. If no matching state is found, a new state is created
+	 * and added to the FSA.
 	 * @param conditionValues
 	 * @return
 	 */
-	int addNewStateIfNotPresent(int[] dataValues) {
+	private int addNewStateIfNotPresent(int[] dataValues) {
 		// could check currentCondition first here, instead of the other ?
 		for (int i = 0; i < states.size(); i++) {
-			if (states.get(i).isStateSatisfiedBy(dataValues)) {
+			if (states.get(i).isStateSatisfiedBy(dataValues))
 				return i;
-			}
 		}
-		// could call addNewState(data) instead of the following if want to delegate;
-		
-		// 
 		int newIndex = states.size();
 		states.add(new State(newIndex, dataValues));
 		return newIndex;
 	}
 
 
-
 	// rename to reflect that it might not be the first run
 	// add data to FSA? modify FSA? extendFSA?
 	void createFSAFromData(int[][] allData) {
-		// obtain the first current state:
+		// obtain the first state:
 		int[] firstDataSet = allData[0];
 		int firstStateIndex = addNewStateIfNotPresent(firstDataSet);
 
 		State currentState = states.get(firstStateIndex);
 
-		// read in and analyze FSA for rest of the data
+		// Analyze the rest of the data, and add to the FSA if needed
 		for (int numAnalyzed = 1; numAnalyzed < allData.length; numAnalyzed++) {
 		 	int[] nextData = allData[numAnalyzed];
 			if (currentState.isStateSatisfiedBy(nextData)) {
-				// stays in the same state
+				// remain in the same state
 				currentState.addTransitionIfNotPresent(currentState.getIndex());
 			} else {
 				int nextStateIndex = addNewStateIfNotPresent(nextData);
@@ -64,7 +70,6 @@ public class FSAImplementation{
 			}
 		}
 	}
-	
 	
 	
 	public String toString() {
