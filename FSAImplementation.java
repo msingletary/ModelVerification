@@ -102,34 +102,13 @@ public class FSAImplementation{
 	}
 	
 	
-
-	public static void main(String[] args) {
-		
-		int numVars = 3;
-		int numDataSets = 7;
-		
-		int[] data_a = {0,1,1,1,1,2,2};
-		int[] data_b = {1,1,1,2,1,1,1};
-		int[] data_c = {1,1,1,1,1,1,0};
-		// assert all are the same length ? if not guaranteed from implementation
-		
-		int[][] dataABC = new int[numDataSets][numVars]; // new int[data_a.length][numVars]
-		
-		for (int i = 0; i < numDataSets; i++) {
-			dataABC[i][0] = data_a[i];
-			dataABC[i][1] = data_b[i];
-			dataABC[i][2] = data_c[i];
+	
+	public String toString() {
+		String output = "Number of states in the FSA: " + this.states.size() + "\n";
+		for (State s : this.states) {
+			output += "\nState:";
+			output += s.toString();
 		}
-		
-		FSAImplementation fsa = new FSAImplementation(numVars);
-
-		fsa.createFSAFromData(dataABC);
-		
-		System.out.println("\nfinished creating fsa!\n");
-		System.out.println("number of states in the FSA: " + fsa.states.size());
-		for (State s : fsa.states) {
-			System.out.println(s.toString());
-		}
+		return output;
 	}
-
 }

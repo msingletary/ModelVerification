@@ -44,14 +44,13 @@ public class State {
 	}
 
 	public String toString() {
-		String output = "Conditions: ";
+		String output = "\tConditions: ";
 		
 		for (Condition c : this.conditions) {
 			output += c.toString() + " ";
 		}
-		output += "\n";
 		
-		output += "Transitions: ";
+		output += "\n\tTransitions: ";
 		for (int i = 0; i < transitions.size(); i++) {
 			output += transitions.get(i);
 			if (i != transitions.size() - 1)
