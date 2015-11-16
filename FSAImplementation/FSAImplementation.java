@@ -10,7 +10,7 @@ public class FSAImplementation{
 
 	
 	/** 
-	 * Constructor for the FSAImplementation program.
+	 * Constructor for a new FSAImplementation object. Constructs an empty FSA.
 	 * @param numVariables The number of variables recorded from the model
 	 * 		& also the number of variables considered when evaluating states
 	 */
@@ -24,6 +24,8 @@ public class FSAImplementation{
 		return this.states.size();
 	}
 	
+	
+	/** @return A list of all states in this FSA */
 	public ArrayList<State> getStates() {
 		return this.states;
 	}
@@ -49,7 +51,7 @@ public class FSAImplementation{
 
 
 	// rename to reflect that it might not be the first run
-	// add data to FSA? modify FSA? extendFSA?
+	// add data to FSA? modify FSA? extendFSA? augment FSA?
 	void createFSAFromData(int[][] allData) {
 		// obtain the first state:
 		int[] firstDataSet = allData[0];

@@ -27,9 +27,9 @@ public class Condition {
 	}
 
 	/**
-	 * Satisfaction of this condition is defined by equality if the condition represents a single
-	 * value. If the condition represents a range of values, the condition is satisfied by the value
-	 * if it falls within the range.
+	 * This condition is satisfied by equality if the condition represents a
+	 * single value. If the condition represents a range of values, the
+	 * condition is satisfied by the value if it falls within this range.
 	 * @return whether the provided value 'satisfies' this condition
 	 */
 	boolean isConditionSatisfiedBy(int value) {

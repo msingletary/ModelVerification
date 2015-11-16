@@ -3,7 +3,7 @@ import java.util.ArrayList;
 
 public class FSAImplementationTest {
 	public static void main(String[] args) {
-		testFSACreationSecondRun();
+		testFSACreationTwoRuns();
 	}
 	
 	static ArrayList<State> testFSACreation() {
@@ -45,12 +45,12 @@ public class FSAImplementationTest {
 		return allData;
 	}
 	
-	static void testFSACreationSecondRun() {
+	static void testFSACreationTwoRuns() {
 		int numVariables = 3;
 		
-		int[] data_a = {0,1,1,1,1,2,2};
-		int[] data_b = {1,1,1,2,1,1,1};
-		int[] data_c = {1,1,1,1,1,1,0};
+		int[] data_a = {0,1,1,1,1,2,2,3};
+		int[] data_b = {1,1,1,2,1,1,1,1};
+		int[] data_c = {1,1,1,1,1,1,0,0};
 
 		int[] data_a2 = {0,1,1,1,1,2,2,0,1};
 		int[] data_b2 = {1,1,3,0,1,1,1,1,1};

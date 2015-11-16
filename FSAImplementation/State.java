@@ -44,7 +44,7 @@ public class State {
 	 * exist in the current FSA.
 	 * @param nextStateIndex The index of the next state
 	 */
-	protected void addTransitionIfNotPresent(int nextStateIndex) {
+	void addTransitionIfNotPresent(int nextStateIndex) {
 		if (!this.transitions.contains(nextStateIndex))
 			this.transitions.add(nextStateIndex);
 	}
@@ -59,6 +59,15 @@ public class State {
 	}
 
 	
+	/**
+	 * @return the index this state is stored at in the array of states for
+	 * the current FSA
+	 */
+	public int getIndex() {
+		return index;
+	}
+	
+	
 	public String toString() {
 		String output = "\tConditions: ";
 		for (Condition c : this.conditions) {
@@ -71,13 +80,5 @@ public class State {
 				output += ", ";
 		}
 		return output;
-	}
-	
-	
-	/**
-	 * @return index this state is stored at in the current FSA's states array
-	 */
-	public int getIndex() {
-		return index;
 	}
 }
