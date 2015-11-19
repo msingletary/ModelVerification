@@ -13,7 +13,7 @@ public class State {
 	 * @param newDataValues Values representing the condition values
 	 * for each variable in this state.
 	 */
-	public State(int newIndex, int[] newDataValues) {
+	public State(int newIndex, DataValue[] newDataValues) {
 		Condition[] newConditions = new Condition[newDataValues.length];
 		for (int i = 0; i < newDataValues.length; i++)
 			newConditions[i] = new Condition(newDataValues[i]);
@@ -28,10 +28,10 @@ public class State {
 	 * @param dataValues Values of variables at a specific point of time
 	 * @return true if these values satisfy every condition of this state
 	 */
-	boolean isStateSatisfiedBy(int[] dataValues) {
+	boolean isStateSatisfiedBy(DataValue[] dataValues) {
 		for (int i = 0; i < this.conditions.length; i++) {
-			Condition c1 = this.conditions[i];
-			if (!c1.isConditionSatisfiedBy(dataValues[i]))
+			Condition stateCondition = this.conditions[i];
+			if (!stateCondition.isConditionSatisfiedBy(dataValues[i]))
 				return false;
 		}
 		return true;
@@ -73,7 +73,7 @@ public class State {
 		for (Condition c : this.conditions) {
 			output += c.toString() + " ";
 		}
-		output += "\n\tTransitions: ";
+		output += "\n\t\tTransitions: ";
 		for (int i = 0; i < transitions.size(); i++) {
 			output += transitions.get(i);
 			if (i != transitions.size() - 1)

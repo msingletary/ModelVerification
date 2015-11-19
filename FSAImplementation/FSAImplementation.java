@@ -38,7 +38,7 @@ public class FSAImplementation{
 	 * @param conditionValues
 	 * @return
 	 */
-	private int addNewStateIfNotPresent(int[] dataValues) {
+	private int addNewStateIfNotPresent(DataValue[] dataValues) {
 		// could check currentCondition first here, instead of the other ?
 		for (int i = 0; i < states.size(); i++) {
 			if (states.get(i).isStateSatisfiedBy(dataValues))
@@ -52,16 +52,18 @@ public class FSAImplementation{
 
 	// rename to reflect that it might not be the first run
 	// add data to FSA? modify FSA? extendFSA? augment FSA?
-	void createFSAFromData(int[][] allData) {
+	void developFSAFromData(ArrayList<DataValue[]> allData) {
 		// obtain the first state:
-		int[] firstDataSet = allData[0];
+		
+		// should the first state be the all null state?
+		DataValue[] firstDataSet = allData.get(0);
 		int firstStateIndex = addNewStateIfNotPresent(firstDataSet);
 
 		State currentState = states.get(firstStateIndex);
 
 		// Analyze the rest of the data, and add to the FSA if needed
-		for (int numAnalyzed = 1; numAnalyzed < allData.length; numAnalyzed++) {
-		 	int[] nextData = allData[numAnalyzed];
+		for (int numAnalyzed = 1; numAnalyzed < allData.size(); numAnalyzed++) {
+		 	DataValue[] nextData = allData.get(numAnalyzed);
 			if (currentState.isStateSatisfiedBy(nextData)) {
 				// remain in the same state
 				currentState.addTransitionIfNotPresent(currentState.getIndex());
@@ -76,8 +78,9 @@ public class FSAImplementation{
 	
 	public String toString() {
 		String output = "Number of states in the FSA: " + this.states.size() + "\n";
-		for (State s : this.states) {
-			output += "\nState:";
+		for (int i = 0; i < this.states.size(); i++) {
+			State s = this.states.get(i);
+			output += "\nState " + s.getIndex() + ":";
 			output += s.toString();
 		}
 		return output;

@@ -24,9 +24,9 @@ public class FSAImplementationTest {
 		
 		FSAImplementation fsa = new FSAImplementation(numVariables);
 
-		fsa.createFSAFromData(dataABC);
+		//fsa.developFSAFromData(dataABC);
 
-		System.out.println(fsa.toString());
+		//System.out.println(fsa.toString());
 		
 		return fsa.getStates();
 	}
@@ -61,11 +61,13 @@ public class FSAImplementationTest {
 		
 		FSAImplementation fsa = new FSAImplementation(numVariables);
 
-		fsa.createFSAFromData(dataABC);
+		/*
+		fsa.developFSAFromData(dataABC);
 		System.out.println("FSA after the first batch of data:\n\n" + fsa.toString());
 		
-		fsa.createFSAFromData(dataABC_2);
+		fsa.developFSAFromData(dataABC_2);
 		System.out.println("\n\n---------------------\n\n");
 		System.out.println("FSA after the second batch of data:\n\n" + fsa.toString());
+		*/
 	}
 }

@@ -1,19 +1,26 @@
-
 /**
  * This class represents a single condition of a state within an FSA. 
  * This condition can either specify a single value or a range of values.
  */
 public class Condition {
+	
+	private boolean initialized;
 	private int low;
 	private int high;
+	//private int agentId;
 
 	/**
 	 * Instantiates a Condition object that represents a single value
 	 * @param singleConditionValue A single value
 	 */
-	public Condition(int singleConditionValue) {
-		low = singleConditionValue;
-		high = singleConditionValue;
+	public Condition(DataValue singleConditionValue) {
+		if (singleConditionValue.initialized) {
+			initialized = true;
+			this.low = singleConditionValue.data;
+			this.high = singleConditionValue.data;
+		} else {
+			this.initialized = false;
+		}
 	}
 
 	/**
@@ -22,23 +29,44 @@ public class Condition {
 	 * @param high The highest value in a range, exclusive
 	 */
 	public Condition(int low, int high) {
+		//public Condition(DataValue low, DataValue high) {
 		this.low = low;
 		this.high = high;
+		this.initialized = true;
+		// should never have a situation where either are not initialized,
+		// since these are specifically defined in the DSL.
 	}
 
 	/**
 	 * This condition is satisfied by equality if the condition represents a
 	 * single value. If the condition represents a range of values, the
 	 * condition is satisfied by the value if it falls within this range.
+	 * An uninitialized condition is satisfied only by an uninitialized value.
 	 * @return whether the provided value 'satisfies' this condition
 	 */
-	boolean isConditionSatisfiedBy(int value) {
-		if (this.low == this.high) {
-			// This condition is a single value
-			return (this.low == value);
-		} else {
-			return ((this.low <= value) && (value < this.high));
-		}
+	boolean isConditionSatisfiedBy(DataValue value) {
+		// An uninitialized value satisfies an uninitialized condition value.
+		if (!initialized && !value.initialized)
+			return true;
+
+		// If this condition's value definition has not been initialized,
+		// it cannot be satisfied by any initialized value
+		if (!initialized && value.initialized)
+			return false;
+		
+		// If query value has not been initialized,
+		// it cannot be satisfied by an initialized condition value.
+		else if (initialized && !value.initialized)
+			return false;
+
+		// This condition is a single value; evaluate for equality.
+		if (low == high)
+			return (low == value.data);
+		
+		// This condition is a range;
+		// evaluate whether the value falls inside this range
+		else
+			return ((low <= value.data) && (value.data < high));
 	}
 	
 	/**
@@ -47,7 +75,9 @@ public class Condition {
 	 */
 	public String toString() {
 		String output = "";
-		if (low == high)
+		if (!initialized)
+			output += "(null)";
+		else if (low == high)
 			output += "(" + low + ")";
 		else 
 			output += "(" + low + ", " + high + ")";
