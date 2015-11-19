@@ -49,13 +49,16 @@ public class FSAImplementation{
 		return newIndex;
 	}
 
-
-	// rename to reflect that it might not be the first run
-	// add data to FSA? modify FSA? extendFSA? augment FSA?
+	
+	/**
+	 * Parse a matrix of data obtained from the model execution run, and add
+	 * any state or transition represented by this data sequence that is not
+	 * already present in the FSA.
+	 * @param allData
+	 */
 	void developFSAFromData(ArrayList<DataValue[]> allData) {
 		// obtain the first state:
-		
-		// should the first state be the all null state?
+		// (should the first state be the all null state?)
 		DataValue[] firstDataSet = allData.get(0);
 		int firstStateIndex = addNewStateIfNotPresent(firstDataSet);
 

@@ -29,12 +29,11 @@ public class Condition {
 	 * @param high The highest value in a range, exclusive
 	 */
 	public Condition(int low, int high) {
-		//public Condition(DataValue low, DataValue high) {
 		this.low = low;
 		this.high = high;
 		this.initialized = true;
-		// should never have a situation where either are not initialized,
-		// since these are specifically defined in the DSL.
+		// Should never have a situation where either are not initialized,
+		// since range conditions are specifically defined in the DSL.
 	}
 
 	/**
