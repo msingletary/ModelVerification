@@ -15,6 +15,7 @@ public class FSAImplementation{
 	 * 		& also the number of variables considered when evaluating states
 	 */
 	public FSAImplementation(int numVariables) {
+		this.numVariables = numVariables;
 		states = new ArrayList<State>();
 	}
 	
@@ -38,7 +39,7 @@ public class FSAImplementation{
 	 * @param conditionValues
 	 * @return
 	 */
-	private int addNewStateIfNotPresent(DataValue[] dataValues) {
+	private int addNewStateIfNotPresent(DataType[] dataValues) {
 		// could check currentCondition first here, instead of the other ?
 		for (int i = 0; i < states.size(); i++) {
 			if (states.get(i).isStateSatisfiedBy(dataValues))
@@ -56,17 +57,17 @@ public class FSAImplementation{
 	 * already present in the FSA.
 	 * @param allData
 	 */
-	void developFSAFromData(ArrayList<DataValue[]> allData) {
+	void developFSAFromData(ArrayList<DataType[]> allData) {
 		// obtain the first state:
 		// (should the first state be the all null state?)
-		DataValue[] firstDataSet = allData.get(0);
+		DataType[] firstDataSet = allData.get(0);
 		int firstStateIndex = addNewStateIfNotPresent(firstDataSet);
 
 		State currentState = states.get(firstStateIndex);
 
 		// Analyze the rest of the data, and add to the FSA if needed
 		for (int numAnalyzed = 1; numAnalyzed < allData.size(); numAnalyzed++) {
-		 	DataValue[] nextData = allData.get(numAnalyzed);
+		 	DataType[] nextData = allData.get(numAnalyzed);
 			if (currentState.isStateSatisfiedBy(nextData)) {
 				// remain in the same state
 				currentState.addTransitionIfNotPresent(currentState.getIndex());
@@ -76,6 +77,27 @@ public class FSAImplementation{
 				currentState = states.get(nextStateIndex);
 			}
 		}
+	}
+	
+	
+	/**
+	 * Used to define a state manually, as defined in the DSL.
+	 * @param values List of DataType values as pairs.
+	 * [value1_var1, value2_var1, value1_var2, value2_var2, ...]
+	 * @return
+	 */
+	boolean defineNewState(DataType[] values) {
+		Condition[] conds = new Condition[numVariables];
+		int varsAdded = 0;
+		for (int i = 0; i < values.length; i = i + 2) {
+			if (values[i].compareTo(values[i+1]) == 0)
+				conds[varsAdded++] = new Condition(values[i]);
+			else
+				conds[varsAdded++] = new Condition(values[i], values[i+1]);
+		}
+		int newIndex = states.size();
+		states.add(new State(newIndex, conds));
+		return false;
 	}
 	
 	

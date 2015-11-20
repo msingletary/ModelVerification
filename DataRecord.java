@@ -3,10 +3,11 @@
  * the model execution.
  */
 public class DataRecord {
-	String variableName;
-	int data;
 	
-	public DataRecord(String variableName, int dataToRecord) {
+	String variableName;
+	DataType data;
+	
+	public DataRecord(String variableName, DataType dataToRecord) {
 		this.variableName = variableName;
 		this.data = dataToRecord;
 	}

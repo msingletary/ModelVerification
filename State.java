@@ -13,10 +13,24 @@ public class State {
 	 * @param newDataValues Values representing the condition values
 	 * for each variable in this state.
 	 */
-	public State(int newIndex, DataValue[] newDataValues) {
+	public State(int newIndex, DataType[] newDataValues) {
 		Condition[] newConditions = new Condition[newDataValues.length];
 		for (int i = 0; i < newDataValues.length; i++)
 			newConditions[i] = new Condition(newDataValues[i]);
+		this.index = newIndex;
+		this.conditions = newConditions;
+		transitions = new ArrayList<Integer>();
+	}
+	
+	
+	/**
+	 * Create a new State object. This is used when defining new states 
+	 * that represent ranges of values.
+	 * @param newIndex Index this state is stored at in the FSA's states array
+	 * @param newDataValues Values representing the condition values
+	 * for each variable in this state.
+	 */
+	public State(int newIndex, Condition[] newConditions) {
 		this.index = newIndex;
 		this.conditions = newConditions;
 		transitions = new ArrayList<Integer>();
@@ -28,7 +42,7 @@ public class State {
 	 * @param dataValues Values of variables at a specific point of time
 	 * @return true if these values satisfy every condition of this state
 	 */
-	boolean isStateSatisfiedBy(DataValue[] dataValues) {
+	boolean isStateSatisfiedBy(DataType[] dataValues) {
 		for (int i = 0; i < this.conditions.length; i++) {
 			Condition stateCondition = this.conditions[i];
 			if (!stateCondition.isConditionSatisfiedBy(dataValues[i]))
