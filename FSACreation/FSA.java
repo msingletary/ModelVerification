@@ -5,6 +5,7 @@ import DataRecording.DataType;
 import DataRecording.DataTypeBoolean;
 import DataRecording.DataTypeDouble;
 import DataRecording.DataTypeInt;
+import DataRecording.DataTypeLong;
 import DataRecording.DataTypeString;
 
 public class FSA {
@@ -156,6 +157,10 @@ public class FSA {
 		return new DataTypeInt(data);
 	}
 	
+	public DataType getDataTypeObject(long data) {
+		return new DataTypeLong(data);
+	}
+	
 	
 	public DataType getDataTypeObject(String data) {
 		return new DataTypeString(data);
@@ -229,6 +234,15 @@ public class FSA {
 		
 		public boolean defineStateCondition(String variable, int valueLow, int valueHigh) {
 			return defineStateCondition(variable, new DataTypeInt(valueLow), new DataTypeInt(valueHigh));
+		}
+		
+		public boolean defineStateCondition(String variable, long value) {
+			//			return defineStateCondition(variable, new DataTypeBoolean(value), new DataTypeBoolean(value));
+			return defineStateCondition(variable, new DataTypeLong(value));
+		}
+		
+		public boolean defineStateCondition(String variable, long valueLow, long valueHigh) {
+			return defineStateCondition(variable, new DataTypeLong(valueLow), new DataTypeLong(valueHigh));
 		}
 
 		public boolean defineStateCondition(String variable, String value) {

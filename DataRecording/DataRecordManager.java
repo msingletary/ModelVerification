@@ -70,6 +70,16 @@ public class DataRecordManager {
 	
 	/**
 	 * Records the result from a method executing in the repast model execution, 
+	 *  when the method has a return type long.
+	 * @param methodEventName The name of the method/variable.
+	 * @param data	The result returned from the event execution.
+	 */
+	public void recordData(String methodEventName, long data) {
+		recordData(methodEventName, new DataTypeLong(data));
+	}
+	
+	/**
+	 * Records the result from a method executing in the repast model execution, 
 	 *  when the method has a return type String.
 	 * @param methodEventName The name of the method/variable.
 	 * @param data	The result returned from the event execution.
@@ -279,6 +289,8 @@ public class DataRecordManager {
 			return new DataTypeDouble();
 		else if (varType.equals("String"))
 			return new DataTypeString();
+		else if (varType.equals("long"))
+			return new DataTypeLong();
 		else if (varType.equals("boolean"))
 			return new DataTypeBoolean();
 		return null;
@@ -300,6 +312,8 @@ public class DataRecordManager {
 			return new DataTypeDouble(data);
 		else if (type.equals("String"))
 			return new DataTypeString(data);
+		else if (type.equals("long"))
+			return new DataTypeLong(data);
 		else if (type.equals("boolean"))
 			return new DataTypeBoolean(data);
 		return null;
