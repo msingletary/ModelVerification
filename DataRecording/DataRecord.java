@@ -1,3 +1,4 @@
+package DataRecording;
 /**
  * This class represents a single data value recorded from a function during
  * the model execution.

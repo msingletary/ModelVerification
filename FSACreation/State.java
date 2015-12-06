@@ -1,4 +1,7 @@
+package FSACreation;
 import java.util.ArrayList;
+
+import DataRecording.DataType;
 
 public class State {
 
@@ -15,8 +18,10 @@ public class State {
 	 */
 	public State(int newIndex, DataType[] newDataValues) {
 		Condition[] newConditions = new Condition[newDataValues.length];
-		for (int i = 0; i < newDataValues.length; i++)
+		for (int i = 0; i < newDataValues.length; i++) {
 			newConditions[i] = new Condition(newDataValues[i]);
+			
+		}
 		this.index = newIndex;
 		this.conditions = newConditions;
 		transitions = new ArrayList<Integer>();
@@ -51,6 +56,14 @@ public class State {
 		return true;
 	}
 
+	boolean isStateEqual(DataType[] dataValues) {
+		for (int i = 0; i < this.conditions.length; i++) {
+			Condition stateCondition = this.conditions[i];
+			if (!stateCondition.isConditionEqual(dataValues[i], dataValues[i + 1]))
+				return false;
+		}
+		return true;
+	}
 	
 	/**
 	 * Adds a transition between this state and the state found at the provided
@@ -82,6 +95,7 @@ public class State {
 	}
 	
 	
+	/** Generate a String representation of this state */
 	public String toString() {
 		String output = "\tConditions: ";
 		for (Condition c : this.conditions) {

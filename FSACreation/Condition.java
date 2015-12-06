@@ -1,3 +1,6 @@
+package FSACreation;
+
+import DataRecording.DataType;
 
 /**
  * This class represents a single condition of a state within an FSA. 
@@ -37,8 +40,6 @@ public class Condition {
 		this.high = high;
 		this.initialized = true;
 		assert(low.compareTo(high) < 0);
-		// Should never have a situation where either are not initialized,
-		// since range conditions are specifically defined in the DSL.
 	}
 
 	
@@ -50,6 +51,7 @@ public class Condition {
 	 * @return whether the provided value 'satisfies' this condition
 	 */
 	boolean isConditionSatisfiedBy(DataType value) {
+		
 		// An uninitialized value satisfies an uninitialized condition value.
 		if (!initialized && !value.isInitialized())
 			return true;
@@ -61,7 +63,7 @@ public class Condition {
 		
 		// If query value has not been initialized,
 		// it cannot be satisfied by an initialized condition value.
-		else if (initialized && !value.isInitialized())
+		if (initialized && !value.isInitialized())
 			return false;
 
 		
@@ -76,16 +78,41 @@ public class Condition {
 		
 		// This condition is a range;
 		// evaluate whether the value falls inside this range
-		else if ((low.compareTo(value) <= 0) && (high.compareTo(value) > 0))
+		else if ((low.compareTo(value) <= 0) && (high.compareTo(value) > 0)) {
 			return true;
+		}
 
 		return false;
 	}
 	
+	
+	/**
+	 * Determines if this condition object is equal to a condition with the 
+	 * specified values. This method is used when manually defining states from
+	 * the DSL and 
+	 * @param vLow
+	 * @param vHigh
+	 * @return
+	 */
+	boolean isConditionEqual(DataType vLow, DataType vHigh) {
+
+		// An uninitialized value is equal to an uninitialized condition value.
+		if (!initialized && !vLow.isInitialized() && !vHigh.isInitialized())
+			return true;
+
+		// If one or two (but not all) of the values are not initialized,
+		// they cannot be equal to an initialized value.
+		if (!initialized || !vLow.isInitialized() || !vHigh.isInitialized())
+			return false;
+		
+		// Evaluate condition values for equality
+		return ((low.compareTo(vLow) == 0) && (high.compareTo(vHigh) == 0));
+	}
+	
 
 	/**
-	 * Generates a String that represents the condition.
-	 * Has the form: (singleValue) or (lowValue, highValue)
+	 * Generates a String representation of this condition.
+	 * Has the form: "(singleValue)" or "(lowValue, highValue)"
 	 */
 	public String toString() {
 		String output = "";
