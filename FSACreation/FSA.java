@@ -140,34 +140,6 @@ public class FSA {
 	}
 	
 	
-	/* These functions are used to convert standard data types to DataType types
-	 * for use with manually defining states for an FSA.
-	 */
-	public DataType getDataTypeObject(boolean data) {
-		return new DataTypeBoolean(data);
-	}
-	
-	
-	public DataType getDataTypeObject(double data) {
-		return new DataTypeDouble(data);
-	}
-	
-	
-	public DataType getDataTypeObject(int data) {
-		return new DataTypeInt(data);
-	}
-	
-	public DataType getDataTypeObject(long data) {
-		return new DataTypeLong(data);
-	}
-	
-	
-	public DataType getDataTypeObject(String data) {
-		return new DataTypeString(data);
-	}
-	
-	
-	
 	public class StateDefinitionManager {
 		
 		HashMap<String, Integer> variableNameIndexMap;
