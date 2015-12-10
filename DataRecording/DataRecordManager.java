@@ -78,6 +78,7 @@ public class DataRecordManager {
 		recordData(methodEventName, new DataTypeLong(data));
 	}
 	
+	
 	/**
 	 * Records the result from a method executing in the repast model execution, 
 	 *  when the method has a return type String.
@@ -118,6 +119,7 @@ public class DataRecordManager {
 			retrieveVariableInformationFromFile();
 		return variableIndexMap;
 	}
+	
 	
 	/**
 	 * Retrieves a matrix from the list of data recorded from method executions 
@@ -271,7 +273,6 @@ public class DataRecordManager {
 		return output;
 	}
 	
-	
 	private DataType getUninitializedDataType(String varName) {
 		if (variableTypeMap == null) {
 			throw new NullPointerException("Map of variable types was not " + 
@@ -322,13 +323,16 @@ public class DataRecordManager {
 	
 	/**
 	 * Reads in the first two lines from the data storage file. 
-	 * Reads and stores the method names (in the order they appear in each matrix row)
-	 *   and the method types.
+	 * Reads and stores the method names (in the order they appear in each row 
+	 *   of the matrix) and the method types.
+	 * This is important to ensure that the data for each variable/method is
+	 * 	 stored in the same column during each run.
+	 * It is also important to know what type is assigned to each variable.
 	 * Stores this information as global variables of this DataRecordManager.
 	 * First two lines of the text file appear as follows:
 	 * method1Name, method2Name, method3Name; i.e.: methodA, methodB, method3 
 	 * method1Type, method2Type, method3Type; i.e.: boolean, int, double
-	 * @return
+	 * @return boolean representing the success of these operations
 	 */
 	private boolean retrieveVariableInformationFromFile() {
 		try {

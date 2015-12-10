@@ -6,35 +6,53 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 
-/* Format of input from DSL: 
- * (easily changed to whatever is appropriate for DSL:
- * method: fully.qualified.methodName; params: type1, type2, type3; return: returnType
- * 
- * or:
- * fully.qualified.methodName; type1, type2, type3; returnType
- * 
- * or:
- * fully.qualified.methodName, type1, type2, type3, returnType
- * and take first as methodName, last as returnType, and params as anything in the middle
- */
+import DataRecording.DataRecordManager;
 
 public class FileGenerator {
 
 	String answerPackage; 	// = "answers"; // name of the package the AspectJ package will be located in
 	String answerName; 		//  = "Answer5"; // name of the AspectJ answer file and class
 	
-	String modelPackageName; 	// get somehow
+	// Path of the Repast model (packageName.ModelClassName)
+	String modelPackageName;
 	
-	int numberMethods;
+	// Number of methods to record from the model.
+	// Later referred to as the number of variables.
+	int numberMethods;	
+	
+	HashMap<String, String> validTypes;
+	
 	
 	/**
 	 * Constructor for a new FileGenerator object. 
-	 * @param modelPackageName The fully qualified name of the package in which
-	 * 	the model of interest is located
+	 * @param modelPackageName The fully qualified name of the package and class
+	 *  in which the model of interest is located
 	 */
 	public FileGenerator(String modelPackageName) {
 		this.modelPackageName = modelPackageName;
 		this.numberMethods = -1;
+		defineValidTypes();
+	}
+	
+	
+	public int getNumVariables() {
+		return numberMethods;
+	}
+	
+	
+	/** 
+	 * These are the valid types that this program supports by having a
+	 * DataType interface implementation that represents data of these types.
+     * The proccessInput method in the FileGenerator class uses these types to
+     * validate the return types provided to the FileGenerator from the DSL.
+	 */
+	private void defineValidTypes() {
+		validTypes = new HashMap<String, String>();
+		validTypes.put("boolean", "boolean");
+		validTypes.put("double", "doubld");
+		validTypes.put("int", "int");
+		validTypes.put("long", "long");
+		validTypes.put("string", "String");
 	}
 		
 	
@@ -42,21 +60,24 @@ public class FileGenerator {
 	 * Generates the AspectJ code needed to record executions of the specified
 	 * methods, and writes this AspectJ code to a .aj file.
 	 * Generates the list of method names and types, and writes to a txt file.
+	 * 
+	 * Format of each string describing a method to record:
+	 * fully.qualified.methodName, paramType1, paramType2, returnType
+	 * with as many parameter types as applicable, 0..*
+	 * 	
 	 * @param answerFileName The desired name of the AspectJ answer file
 	 * @param answerPackage The desired package location for the AspectJ file
 	 * @param inputMethodInfo List of Strings describing the methods to record
 	 */
 	public void generate(String answerPackageName, String answerFileName, 
 			String[] methods) {
-		// strip anything after the "." if the answer name has been provided including a file extension
+		// strips any file extension from the answer file name
 		if (answerFileName.indexOf(".") > 0)
 			this.answerName =
 					answerFileName.substring(0, answerFileName.indexOf("."));
-		if (methods.length < 1) {
-			System.out.println("Must provide information about one or more " + 
-					"method to record.");
-			return;
-		}
+		if (methods.length < 1)
+			throw new NullPointerException("Must provide information about one" 
+					+ "or more methods to record.");
 		this.answerName = answerFileName;
 		this.answerPackage = answerPackageName;
 		this.numberMethods = methods.length;
@@ -66,11 +87,6 @@ public class FileGenerator {
 		String aspectContentToWrite = getAspectJContent(mList);
 		writeAspectJContentToFile(aspectContentToWrite);
 		writeVariableListToFile(mList);
-	}
-	
-	
-	public int getNumVariables() {
-		return numberMethods;
 	}
 	
 	
@@ -93,7 +109,7 @@ public class FileGenerator {
 		}
 		return methods;
 	}
-	
+
 	
 	/**
 	 * Class representing a single method in the repast model that should be
@@ -102,7 +118,7 @@ public class FileGenerator {
 	private class MethodInfo {
 		String qualifiedMethodName;
 		String shortMethodName;
-		String[] paramTypes;
+		String paramTypeList;
 		String returnType;
 		
 		//[qualifiedMethodName, params..., returnType]
@@ -111,13 +127,37 @@ public class FileGenerator {
 			// which should have been caught by DSL (?)
 			qualifiedMethodName = description[0];
 			shortMethodName = getShortMethodName(qualifiedMethodName);
+			
 			returnType = description[description.length - 1];
-			if (description.length > 2)
-				paramTypes =
-					Arrays.copyOfRange(description, 1, description.length - 1);
+			returnType = validTypes.get(returnType.trim().toLowerCase());
+			if (returnType == null)
+				throw new NullPointerException("The return type (" + returnType
+						+ ") specified for" +
+						" the method named " + shortMethodName + " is not a " +
+						" valid type supported by this recording/FSA program");
+			
+			if (description.length > 2) {
+				String[] paramTypes = Arrays.copyOfRange(description, 1,
+						description.length - 1);
+				paramTypeList = createParamTypeString(paramTypes);
+			}
 			else
-				paramTypes = new String[0];
+				paramTypeList = "";
 		}
+		
+		/** @returns Array of parameter types as a comma delimited String. */
+		private String createParamTypeString(String[] paramTypeList) {
+			String paramTypesString = "";
+			int numAdded = 1;
+			for (String type : paramTypeList) {
+				paramTypesString += type;
+				// if not the last parameter, add comma and space:
+				if (numAdded++ != paramTypeList.length)
+					paramTypesString += ", ";
+			}
+			return paramTypesString;
+		}
+		
 		
 		/*
 		 * This method can be used for testing & manually verifying the
@@ -128,21 +168,22 @@ public class FileGenerator {
 			System.out.println("\nMethod name: " + qualifiedMethodName +
 					"\nShort method name: " + shortMethodName);
 			System.out.print("Parameter Types: ");
-			for (String p : paramTypes)
-				System.out.print(p + " ");
-			if (paramTypes.length == 0)
-				System.out.print("no params");
+			if (paramTypeList.equals(""))
+				System.out.println("no params");
+			else
+				System.out.println(paramTypeList);
 			System.out.println("\nReturn type: " + returnType);
 		}
+	
 	}
 	
 
 	/* This method generates a String that represents the content that 
 	 * the AspectJ advice file should have in order to record the
-	 * occurrences of the specified methods from the repast model.
+	 * occurrences of each of the specified methods from the repast model.
 	 * 
 	 * pointcut METHODNAMEEvent():
-	 *    call(RETURNTYPE METHODNAME(PARAMLIST items);
+	 *    call(RETURNTYPE METHODNAME(PARAMTYPELIST);
 	 * RETURNTYPE around(): METHODNAMEEvent() {
 	 *    RETURNTYPE result = proceed();
 	 *    dataMgr.recordData("METHODNAME", result);
@@ -166,6 +207,8 @@ public class FileGenerator {
 		answer += "\tint numVariables = " + methodEventsToRecord.length + ";\n";
 		answer += "\tString dataStorageLocation = \"src/" + answerPackage + "/" + answerName + "Data.txt\";\n\n";
 		answer += "\tDataRecordManager dataMgr;\n\n";
+		
+		// generate code to add functionality to setup() and buildModel() 
 		answer += getAspectJCodeToManageData();
 		answer += "\n\n";
 		
@@ -194,8 +237,8 @@ public class FileGenerator {
 	 */
 	private static String getAspectJCodeToRecordMethodExecution(MethodInfo method) {
 		String aspectJPointcut = "\tpointcut " + method.shortMethodName + "Event():\n"
-				+ "\t\texecution(" + method.returnType + " " + method.qualifiedMethodName + "("
-				+ getParamTypeString(method.paramTypes) + "));\n";
+				+ "\t\texecution(" + method.returnType + " " + method.qualifiedMethodName 
+				+ "(" + method.paramTypeList + "));\n";
 		String aspectJAdvice = 
 				"\t" + method.returnType + " around(): " + method.shortMethodName + "Event() {\n"
 				+ "\t\t" + method.returnType + " result = proceed();\n"
@@ -208,8 +251,10 @@ public class FileGenerator {
 	
 	
 	/**
+	 * Generate a String representing the code needed to record data. Modify
+	 * if the technique for recording data changes.
 	 * @param methodName The name of the method that this code should record
-	 * @return The format/template for recording a single execution of this method.
+	 * @return The format used to record a single execution of this method.
 	 */
 	private static String getDataRecordingTemplate(String methodName) {
 		return ("dataMgr.recordData(\"" + methodName + "\", result);");
@@ -220,17 +265,24 @@ public class FileGenerator {
 	 * Generates and returns the AspectJ code that will be used to instantiate
 	 * a new DataRecordManager for the execution of the model. Generates code
 	 * to instantiate the development of the FSA from the data from the run.
+	 * 	
+	 * after() : execution(void segregation.SegregationBatch.setup()) {
+	 *	dataMgr = new DataRecordManager(numVariables, dataStorageLocation);
+	 * }
+	 * after() : execution(void segregation.SegregationBatch.atEnd()) {
+	 * 	dataMgr.writeRecentDataToFile();
+	 * }
+	 * 
 	 * @return AspectJ code for invoking the data recording and FSA creation
 	 */
 	private String getAspectJCodeToManageData() {
-		String output = "\tpointcut setupExecution() :\n"
-				+ "\t\texecution(void " + modelPackageName + ".setup());";
-		output += "\n\n\tafter() : execution(void " + modelPackageName 
-				+ ".setup()) {";
+		String output = "";
+		output += "\tafter() : " 
+				+ " execution(void " + modelPackageName + ".setup()) {";
 		output += "\n\t\tdataMgr = new DataRecordManager(numVariables, dataStorageLocation);";
 		output += "\n\t}";
 		
-		output += "\n\tafter() :" 
+		output += "\n\tafter() : " 
 				+ "execution(void " + modelPackageName + ".atEnd()) {";
 		output += "\n\t\tdataMgr.writeRecentDataToFile();";
 		output += "\n\t}";
@@ -245,18 +297,7 @@ public class FileGenerator {
 	}
 	
 	
-	/** @returns The array of parameter types as a comma delimited String. */
-	private static String getParamTypeString(String[] paramTypeList) {
-		String paramTypesString = "";
-		int numAdded = 1;
-		for (String type : paramTypeList) {
-			paramTypesString += type;
-			// if not the last parameter, add comma and space:
-			if (numAdded++ != paramTypeList.length)
-				paramTypesString += ", ";
-		}
-		return paramTypesString;
-	}
+
 	
 	
 	/**
