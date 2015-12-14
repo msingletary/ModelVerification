@@ -15,12 +15,10 @@ public class FSA {
 	 */
 	private int numVariables;
 	private ArrayList<State> states;
-	
-	private String[] variableNames;
 
 	
 	/** 
-	 * Constructor for a new FSAImplementation object. Constructs an empty FSA.
+	 * Constructor for a new, empty FSA.
 	 * @param numVariables The number of variables recorded from the model
 	 * 		& also the number of variables considered when evaluating states
 	 */
@@ -30,64 +28,9 @@ public class FSA {
 	}
 	
 	
-	public void defineVariableNames(String[] varNames) {
-		this.variableNames = varNames;
-	}
-	
-	
 	/** @return the number of states that have been defined for this FSA */
 	public int getNumStates() {
 		return this.states.size();
-	}
-	
-	
-	/** @return A list of all states in this FSA */
-	public ArrayList<State> getStates() {
-		return this.states;
-	}
-
-	
-	/**
-	 * Searches the existing states in the FSA for one that is satisfied by the
-	 * specified values. If no matching state is found, a new state is created
-	 * and added to the FSA.
-	 * @param conditionValues
-	 * @return
-	 */
-	private int addNewStateIfNotPresent(DataType[] dataValues) {
-		for (int i = 0; i < states.size(); i++) {
-			if (states.get(i).isStateSatisfiedBy(dataValues)) {
-				return i;
-			}
-		}
-		int newIndex = states.size();
-		states.add(new State(newIndex, dataValues));
-		return newIndex;
-	}
-	
-	
-	public int defineNewState(DataType[] dataValues) {
-		// dealing with range conditions
-		for (int i = 0; i < states.size(); i++) {
-			if (states.get(i).isStateEqual(dataValues)) {
-				return i;
-			}
-		}
-		Condition[] conditions = new Condition[numVariables];
-		for (int i = 0; i < conditions.length; i++) {
-			if (dataValues[i*2].compareTo(dataValues[i*2+1]) == 0) {
-				conditions[i] = new Condition(dataValues[i*2]);
-			}
-			else {
-				// range condition
-				conditions[i] =
-						new Condition(dataValues[i*2], dataValues[i*2 + 1]);
-			}
-		}
-		
-		int newIndex = states.size();
-		states.add(new State(newIndex, conditions));
-		return newIndex;
 	}
 
 	
@@ -95,24 +38,22 @@ public class FSA {
 	 * Parse a matrix of data obtained from the execution of the model, and add
 	 * to the FSA, any state or transition represented by this data sequence
 	 * that is not already present in the FSA.
-	 * @param allData The matrix representing a list of 'data sets' (where each
-	 *    data set is a list of values - one value for each variable examined in
-	 *    the FSA). This is obtained from parsing the data file
+	 * @param allData The matrix obtained from parsing the data file.
 	 */
 	public void developFSAFromData(ArrayList<DataType[]> allData) {
-		// obtain the first state, which should be the all null state:
+		// Obtain the first state, which should be all uninitialized values
 		DataType[] firstDataSet = allData.get(0);
-		int firstStateIndex = addNewStateIfNotPresent(firstDataSet);
+		int firstStateIndex = retrieveState(firstDataSet);
 		State currentState = states.get(firstStateIndex);
 
-		// Analyze the rest of the data, and add to the FSA if needed
+		// Analyze the rest of the data, and add new states to the FSA if needed
 		for (int numAnalyzed = 1; numAnalyzed < allData.size(); numAnalyzed++) {
 		 	DataType[] nextDataSet = allData.get(numAnalyzed);
 			if (currentState.isStateSatisfiedBy(nextDataSet)) {
 				// remain in the same state
 				currentState.addTransitionIfNotPresent(currentState.getIndex());
 			} else {
-				int nextStateIndex = addNewStateIfNotPresent(nextDataSet);
+				int nextStateIndex = retrieveState(nextDataSet);
 				currentState.addTransitionIfNotPresent(nextStateIndex);
 				currentState = states.get(nextStateIndex);
 			}
@@ -121,16 +62,28 @@ public class FSA {
 	
 	
 	/**
+	 * Searches the existing states in the FSA for one that is satisfied by the
+	 * specified values. If no matching state is found, a new state is created
+	 * and added to the FSA.
+	 * @param dataValues the target values of each variable in this state
+	 * @return the index in the states array of the state these values satisfy
+	 */
+	private int retrieveState(DataType[] dataValues) {
+		for (int i = 0; i < states.size(); i++) {
+			if (states.get(i).isStateSatisfiedBy(dataValues))
+				return i;
+		}
+		int newIndex = states.size();
+		states.add(new State(newIndex, dataValues, true));
+		return newIndex;
+	}
+	
+	
+	/**
 	 * Create a String representation of this FSA.
 	 */
 	public String toString() {
 		String output = "Number of states in the FSA: " + states.size() + "\n";
-		if (variableNames != null) {
-			output += "variable names: ";
-			for (int i = 0; i < variableNames.length; i++) {
-				output += "(" + variableNames[i] + ") ";
-			}
-		}
 		for (int i = 0; i < states.size(); i++) {
 			State s = states.get(i);
 			output += "\nState " + s.getIndex() + ":";
@@ -140,102 +93,124 @@ public class FSA {
 	}
 	
 	
-	public class StateDefinitionManager {
+	
+	/**
+	 * This class is used to define states 'manually' from information provided
+	 * by the DSL. 
+	 */
+	public class StateDefinitionBuilder {
 		
 		HashMap<String, Integer> variableNameIndexMap;
-		HashMap<String, String> variableTypeMap;
+		
 		
 		DataType[] dataValues;
-		/* 0 -> 0, 1 = i * 2, i*2 + 1
-		 * 1 -> 2, 3 = i*2, i*2 + 1
-		 * 2 -> 4, 5 = i*2, i*2 + 1
-		 * 3 -> 6, 7
-		 * 
-		 */
 		
-		public StateDefinitionManager(HashMap<String, Integer> varNameIndices, HashMap<String, String> varTypes) {
+		
+		/**
+		 * Constructor for a new StateDefinitionManager. This object will allow
+		 * you to define a new state for the FSA manually (as opposed to
+		 * defining new states from the data recorded). 
+		 * @param varNameIndices
+		 * @param varTypes
+		 */
+		public StateDefinitionBuilder(HashMap<String, Integer> varNameIndices) {
 			variableNameIndexMap = varNameIndices;
-			variableTypeMap = varTypes;
-			
 			dataValues = new DataType[numVariables * 2];
 		}
+
 		
-		// could get rid of this and only call the other one
-		private boolean defineStateCondition(String variable, DataType value) {
+		/**
+		 * Creates a new state from the information that has been provided to
+		 * this StateDefinitionManager object. 
+		 * @return index of the new state that has been created. Returns -1 if 
+		 *    there is one or more variables that do not have a condition defined
+		 */
+		public int createState() {
+			// verify all info has been added
+			for (int i = 0; i < dataValues.length; i++) {
+				if (dataValues[i] == null) {
+					// Cannot define a state without defining state values for all variables.
+					return -1;
+				}
+			}
+			int newIndex = states.size();
+			states.add(new State(newIndex, dataValues, false));
+			return newIndex;
+		}
+		
+		
+		/**
+		 * Define a new condition for this state. Will override any previous
+		 * value(s) assigned for this variable during this state definition.
+		 * @param variable Name of the variable to define a condition for
+		 * @param valueLow The low end of a range value, or a single value
+		 * @param valueHigh The high end of a range value, or a single value
+		 */
+		private boolean defineStateCondition(String variable,
+				DataType valueLow, DataType valueHigh) {
 			int index = variableNameIndexMap.get(variable);
-			int dvIndex1 = index * 2;
-			int dvIndex2 = index * 2 + 1;
-			dataValues[dvIndex1] = value;
-			dataValues[dvIndex2] = value;
+			int lowIndex = index * 2;
+			int highIndex = index * 2 + 1;
+			dataValues[lowIndex] = valueLow;
+			dataValues[highIndex] = valueHigh;
 			return true;
 		}
 		
+		
+		public void defineStateCondition(String variable, boolean value) {
+			defineStateCondition(variable, new DataTypeBoolean(value), new DataTypeBoolean(value));
+		}
+		
+		public void defineStateCondition(String variable, boolean valueLow, boolean valueHigh) {
+			if (valueLow != valueHigh)
+				throw new IllegalArgumentException("Invalid condition values. "
+					+ "Cannot define a range for boolean values");
+				
+			defineStateCondition(variable, new DataTypeBoolean(valueLow), new DataTypeBoolean(valueHigh));
+		}
+		
+		public void defineStateCondition(String variable, double value) {
+			defineStateCondition(variable, new DataTypeDouble(value), new DataTypeDouble(value));
+		}
+		
+		public void defineStateCondition(String variable, double valueLow, double valueHigh) {
+			if (valueLow > valueHigh)
+				throw new IllegalArgumentException("Invalid condition values. "
+						+ valueLow + " should not be greater than " + valueHigh);
+			defineStateCondition(variable, new DataTypeDouble(valueLow), new DataTypeDouble(valueHigh));
+		}
+		
+		public void defineStateCondition(String variable, int value) {
+			defineStateCondition(variable, new DataTypeInt(value), new DataTypeInt(value));
+		}
+		
+		public void defineStateCondition(String variable, int valueLow, int valueHigh) {
+			if (valueLow > valueHigh)
+				throw new IllegalArgumentException("Invalid condition values. "
+						+ valueLow + " should not be greater than " + valueHigh);
+			defineStateCondition(variable, new DataTypeInt(valueLow), new DataTypeInt(valueHigh));
+		}
+		
+		public void defineStateCondition(String variable, long value) {
+			defineStateCondition(variable, new DataTypeLong(value), new DataTypeLong(value));
+		}
+		
+		public void defineStateCondition(String variable, long valueLow, long valueHigh) {
+			if (valueLow > valueHigh)
+				throw new IllegalArgumentException("Invalid condition values. "
+						+ valueLow + " should not be greater than " + valueHigh);
+			defineStateCondition(variable, new DataTypeLong(valueLow), new DataTypeLong(valueHigh));
+		}
 
-		private boolean defineStateCondition(String variable, DataType valueLow, DataType valueHigh) {
-			int index = variableNameIndexMap.get(variable);
-			int dvIndex1 = index * 2;
-			int dvIndex2 = index * 2 + 1;
-			dataValues[dvIndex1] = valueLow;
-			dataValues[dvIndex2] = valueHigh;
-			return false;
-		}
-
-		public boolean defineStateCondition(String variable, boolean value) {
-			//			return defineStateCondition(variable, new DataTypeBoolean(value), new DataTypeBoolean(value));
-			return defineStateCondition(variable, new DataTypeBoolean(value));
+		public void defineStateCondition(String variable, String value) {
+			defineStateCondition(variable, new DataTypeString(value), new DataTypeString(value));
 		}
 		
-		public boolean defineStateCondition(String variable, boolean valueLow, boolean valueHigh) {
-			return defineStateCondition(variable, new DataTypeBoolean(valueLow), new DataTypeBoolean(valueHigh));
-		}
-		
-		public boolean defineStateCondition(String variable, double value) {
-			//			return defineStateCondition(variable, new DataTypeBoolean(value), new DataTypeBoolean(value));
-			return defineStateCondition(variable, new DataTypeDouble(value));
-		}
-		
-		public boolean defineStateCondition(String variable, double valueLow, double valueHigh) {
-			return defineStateCondition(variable, new DataTypeDouble(valueLow), new DataTypeDouble(valueHigh));
-		}
-		
-
-		public boolean defineStateCondition(String variable, int value) {
-			//			return defineStateCondition(variable, new DataTypeBoolean(value), new DataTypeBoolean(value));
-			return defineStateCondition(variable, new DataTypeInt(value));
-		}
-		
-		public boolean defineStateCondition(String variable, int valueLow, int valueHigh) {
-			return defineStateCondition(variable, new DataTypeInt(valueLow), new DataTypeInt(valueHigh));
-		}
-		
-		public boolean defineStateCondition(String variable, long value) {
-			//			return defineStateCondition(variable, new DataTypeBoolean(value), new DataTypeBoolean(value));
-			return defineStateCondition(variable, new DataTypeLong(value));
-		}
-		
-		public boolean defineStateCondition(String variable, long valueLow, long valueHigh) {
-			return defineStateCondition(variable, new DataTypeLong(valueLow), new DataTypeLong(valueHigh));
-		}
-
-		public boolean defineStateCondition(String variable, String value) {
-			//			return defineStateCondition(variable, new DataTypeBoolean(value), new DataTypeBoolean(value));
-			return defineStateCondition(variable, new DataTypeString(value));
-		}
-		
-		public boolean defineStateCondition(String variable, String valueLow, String valueHigh) {
-			return defineStateCondition(variable, new DataTypeString(valueLow), new DataTypeString(valueHigh));
-		}
-		
-		// Must modify if defining states that include uninitialized values is desired
-		public int createState() {
-			// validate all info has been added!
-			for (int i = 0; i < dataValues.length; i++) {
-				if (dataValues[i] == null) {
-					throw new NullPointerException("Cannot define a state without defining target values for all variables.");
-				}
-			}
-			// what should happen if you try to define a state with a range that overlaps another state?
-			return defineNewState(dataValues);
+		public void defineStateCondition(String variable, String valueLow, String valueHigh) {
+			if (valueLow.compareTo(valueHigh) > 0)
+				throw new IllegalArgumentException("Invalid condition values. "
+						+ valueLow + " should not be greater than " + valueHigh);
+			defineStateCondition(variable, new DataTypeString(valueLow), new DataTypeString(valueHigh));
 		}
 	}
 }

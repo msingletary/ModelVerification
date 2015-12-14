@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 
-import DataRecording.DataRecordManager;
 
 public class FileGenerator {
 
@@ -15,6 +14,9 @@ public class FileGenerator {
 	
 	// Path of the Repast model (packageName.ModelClassName)
 	String modelPackageName;
+	
+	// Path of the data storage file
+	String dataFileLocation;
 	
 	// Number of methods to record from the model.
 	// Later referred to as the number of variables.
@@ -39,6 +41,10 @@ public class FileGenerator {
 		return numberMethods;
 	}
 	
+	public String getDataFileLocation() {
+		return dataFileLocation;
+	}
+	
 	
 	/** 
 	 * These are the valid types that this program supports by having a
@@ -49,12 +55,12 @@ public class FileGenerator {
 	private void defineValidTypes() {
 		validTypes = new HashMap<String, String>();
 		validTypes.put("boolean", "boolean");
-		validTypes.put("double", "doubld");
+		validTypes.put("double", "double");
 		validTypes.put("int", "int");
 		validTypes.put("long", "long");
 		validTypes.put("string", "String");
 	}
-		
+	
 	
 	/**
 	 * Generates the AspectJ code needed to record executions of the specified
@@ -80,6 +86,8 @@ public class FileGenerator {
 					+ "or more methods to record.");
 		this.answerName = answerFileName;
 		this.answerPackage = answerPackageName;
+		// this can be modified to a different location that is better suited
+		this.dataFileLocation = "src/" + answerPackage + "/" + answerName + "Data.txt";
 		this.numberMethods = methods.length;
 		
 		MethodInfo[] mList = processInput(methods);
@@ -205,7 +213,7 @@ public class FileGenerator {
 		answer += "import java.util.ArrayList;\n";
 		answer += "public aspect " + answerName + " {\n\n";
 		answer += "\tint numVariables = " + methodEventsToRecord.length + ";\n";
-		answer += "\tString dataStorageLocation = \"src/" + answerPackage + "/" + answerName + "Data.txt\";\n\n";
+		answer += "\tString dataStorageLocation = \"" + dataFileLocation + "\";\n\n";
 		answer += "\tDataRecordManager dataMgr;\n\n";
 		
 		// generate code to add functionality to setup() and buildModel() 

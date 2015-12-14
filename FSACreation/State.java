@@ -14,17 +14,36 @@ public class State {
 	 * Create a new State object
 	 * @param newIndex Index this state is stored at in the FSA's states array
 	 * @param newDataValues Values representing the condition values
-	 * for each variable in this state.
+	 * 		for each variable in this state.
+	 * @param fromData Whether this State is being defined from reading data
+	 * 		or from a manual definition from information in the DSL
 	 */
-	public State(int newIndex, DataType[] newDataValues) {
-		Condition[] newConditions = new Condition[newDataValues.length];
-		for (int i = 0; i < newDataValues.length; i++) {
-			newConditions[i] = new Condition(newDataValues[i]);
-			
+	public State(int newIndex, DataType[] newDataValues, boolean fromData) {
+		if (fromData) {
+			Condition[] newConditions = new Condition[newDataValues.length]; 
+			// state is defined by parsing data. there will be no range conditions
+			for (int i = 0; i < newDataValues.length; i++)
+				newConditions[i] = new Condition(newDataValues[i]);
+			this.index = newIndex;
+			this.conditions = newConditions;
+			transitions = new ArrayList<Integer>();
+		} else {
+			int numConditions = newDataValues.length / 2;
+			Condition[] newConditions = new Condition[numConditions]; 
+			for (int i = 0; i < (numConditions); i++) {
+				if (newDataValues[i*2].compareTo(newDataValues[i*2+1]) == 0) {
+					newConditions[i] = new Condition(newDataValues[i*2]);
+				}
+				else {
+					// range condition
+					newConditions[i] = new Condition(newDataValues[i*2],
+										newDataValues[i*2 + 1]);
+				}
+			}
+			this.index = newIndex;
+			this.conditions = newConditions;
+			transitions = new ArrayList<Integer>();
 		}
-		this.index = newIndex;
-		this.conditions = newConditions;
-		transitions = new ArrayList<Integer>();
 	}
 	
 	
