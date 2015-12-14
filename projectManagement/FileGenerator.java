@@ -209,8 +209,6 @@ public class FileGenerator {
 		// create AspectJ answer heading:
 		String answer = "package " + answerPackage + ";\n\n";
 		answer += "import DataRecording.DataRecordManager;\n";
-		answer += "import DataRecording.DataType;\n";
-		answer += "import java.util.ArrayList;\n";
 		answer += "public aspect " + answerName + " {\n\n";
 		answer += "\tint numVariables = " + methodEventsToRecord.length + ";\n";
 		answer += "\tString dataStorageLocation = \"" + dataFileLocation + "\";\n\n";
